@@ -412,6 +412,171 @@
         .restart-btn:active {
             transform: translateY(0);
         }
+
+        .start-screen {
+            display: none;
+            text-align: center;
+            animation: slideIn 0.4s ease;
+        }
+
+        .start-screen.show {
+            display: block;
+        }
+
+        .start-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, var(--primary), #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .timer-toggle-container {
+            margin-bottom: 32px;
+            padding: 24px;
+            background: var(--light-bg);
+            border-radius: 12px;
+            border: 2px solid var(--border);
+        }
+
+        .timer-toggle-label {
+            display: block;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text);
+        }
+
+        .toggle-switch {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 52px;
+            height: 28px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.3s;
+            border-radius: 28px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        .toggle-status {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--primary);
+            min-width: 80px;
+        }
+
+        .timer-info {
+            font-size: 13px;
+            opacity: 0.7;
+            margin-top: 12px;
+            line-height: 1.6;
+        }
+
+        .start-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(99, 102, 241, 0.3);
+        }
+
+        .start-btn:active {
+            transform: translateY(0);
+        }
+
+        .timer-display {
+            display: none;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 8px 12px;
+            background: var(--light-bg);
+            border-radius: 8px;
+            border: 2px solid var(--border);
+            margin-bottom: 16px;
+            text-align: right;
+            transition: all 0.1s ease;
+        }
+
+        .timer-display.show {
+            display: block;
+        }
+
+        .timer-display.warning {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: var(--error);
+            color: var(--error);
+        }
+
+        .timer-bar {
+            height: 4px;
+            background: var(--light-bg);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+
+        .timer-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), #818cf8);
+            border-radius: 2px;
+            transition: width 0.1s linear;
+        }
+
+        .timer-bar-fill.warning {
+            background: linear-gradient(90deg, var(--error), #ef5350);
+        }
     </style>
 </head>
 <body>
@@ -421,6 +586,25 @@
             <p class="subtitle">우주에 대해 얼마나 알고 있나요?</p>
         </div>
 
+        <div class="start-screen show" id="start-screen">
+            <h2 class="start-title">게임 설정</h2>
+            <div class="timer-toggle-container">
+                <label class="timer-toggle-label">타이머 모드</label>
+                <div class="toggle-switch">
+                    <label class="switch">
+                        <input type="checkbox" id="timer-mode-toggle">
+                        <span class="slider"></span>
+                    </label>
+                    <div class="toggle-status" id="toggle-status">OFF</div>
+                </div>
+                <div class="timer-info">
+                    <div>타이머 모드를 활성화하면 각 문제마다 15초의 제한 시간이 주어집니다.</div>
+                    <div style="margin-top: 8px;">시간이 다 되면 오답으로 처리되고 자동으로 다음 문제로 진행됩니다.</div>
+                </div>
+            </div>
+            <button class="start-btn" onclick="startQuiz()">게임 시작</button>
+        </div>
+
         <div class="progress-container">
             <div class="progress-stats">
                 <span><span id="current-question">1</span> / <span id="total-questions">10</span></span>
@@ -428,6 +612,13 @@
             </div>
             <div class="progress-bar">
                 <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+
+        <div class="timer-display" id="timer-display">
+            <div>남은 시간: <span id="timer-seconds">15</span>초</div>
+            <div class="timer-bar">
+                <div class="timer-bar-fill" id="timer-bar-fill"></div>
             </div>
         </div>
 
@@ -453,6 +644,7 @@
             <h2 class="result-title">퀴즈 완료!</h2>
             <div class="result-score" id="final-score">0/10</div>
             <p class="result-message" id="result-message">잘했어요!</p>
+            <p id="timer-mode-badge" style="font-size: 13px; opacity: 0.7; margin-bottom: 16px; display: none;">⏱️ 타이머 모드로 플레이함</p>
             <button class="restart-btn" onclick="location.reload()">다시 시작하기</button>
         </div>
     </div>
@@ -515,6 +707,10 @@
         let correctCount = 0;
         let incorrectCount = 0;
         let answered = false;
+        let timerMode = false;
+        let timerInterval = null;
+        let timeRemaining = 15;
+        const TIMER_DURATION = 15;
 
         // Test results tracking
         const testResults = {
@@ -522,7 +718,8 @@
             feedbackMessages: [],
             progressBar: [],
             keyboardNav: [],
-            resultsScreen: null
+            resultsScreen: null,
+            timerMode: false
         };
 
         function initQuiz() {
@@ -531,6 +728,26 @@
             incorrectCount = 0;
             answered = false;
             document.getElementById('results-screen').classList.remove('show');
+            document.getElementById('start-screen').classList.add('show');
+            document.getElementById('quiz-container').innerHTML = '';
+            
+            // Setup timer mode toggle
+            const timerToggle = document.getElementById('timer-mode-toggle');
+            timerToggle.addEventListener('change', updateToggleStatus);
+            timerToggle.checked = false;
+            updateToggleStatus();
+        }
+
+        function updateToggleStatus() {
+            const timerToggle = document.getElementById('timer-mode-toggle');
+            const toggleStatus = document.getElementById('toggle-status');
+            timerMode = timerToggle.checked;
+            toggleStatus.textContent = timerMode ? 'ON' : 'OFF';
+            testResults.timerMode = timerMode;
+        }
+
+        function startQuiz() {
+            document.getElementById('start-screen').classList.remove('show');
             showQuestion();
         }
 
@@ -552,11 +769,96 @@
             
             updateProgress();
             answered = false;
+            
+            // Start timer if enabled
+            if (timerMode) {
+                startTimer();
+            }
+        }
+
+        function startTimer() {
+            timeRemaining = TIMER_DURATION;
+            const timerDisplay = document.getElementById('timer-display');
+            timerDisplay.classList.add('show');
+            updateTimerDisplay();
+            
+            if (timerInterval) clearInterval(timerInterval);
+            
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                updateTimerDisplay();
+                
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    if (!answered) {
+                        // Auto-answer with timeout (mark as incorrect)
+                        autoTimeoutAnswer();
+                    }
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const timerSecondsEl = document.getElementById('timer-seconds');
+            const timerBarFill = document.getElementById('timer-bar-fill');
+            const timerDisplay = document.getElementById('timer-display');
+            
+            timerSecondsEl.textContent = timeRemaining;
+            const percentage = (timeRemaining / TIMER_DURATION) * 100;
+            timerBarFill.style.width = `${percentage}%`;
+            
+            if (timeRemaining <= 5) {
+                timerDisplay.classList.add('warning');
+                timerBarFill.classList.add('warning');
+            } else {
+                timerDisplay.classList.remove('warning');
+                timerBarFill.classList.remove('warning');
+            }
+        }
+
+        function autoTimeoutAnswer() {
+            if (answered) return;
+            answered = true;
+
+            const question = questions[currentQuestion];
+            const options = document.querySelectorAll('.option');
+            const feedback = document.getElementById('feedback');
+
+            // Mark all options as disabled
+            options.forEach(opt => opt.style.pointerEvents = 'none');
+
+            // Mark incorrect and show correct answer
+            incorrectCount++;
+            options[question.correct].classList.add('correct');
+            feedback.innerHTML = `<strong>⏱️ 시간이 다 됐습니다</strong><br>정답: ${question.options[question.correct]}`;
+            feedback.className = 'feedback show incorrect';
+            testResults.feedbackMessages.push({
+                question: currentQuestion,
+                type: 'timeout',
+                text: feedback.textContent
+            });
+
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'next-btn show';
+            nextBtn.textContent = currentQuestion === questions.length - 1 ? '결과 보기' : '다음 문제';
+            nextBtn.onclick = () => {
+                clearInterval(timerInterval);
+                nextQuestion();
+            };
+            
+            const container = document.querySelector('.question-container');
+            container.appendChild(nextBtn);
+
+            updateProgress();
         }
 
         function selectAnswer(index) {
             if (answered) return;
             answered = true;
+
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
 
             const question = questions[currentQuestion];
             const options = document.querySelectorAll('.option');
@@ -598,6 +900,12 @@
         }
 
         function nextQuestion() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+            const timerDisplay = document.getElementById('timer-display');
+            timerDisplay.classList.remove('show');
+            
             currentQuestion++;
             if (currentQuestion >= questions.length) {
                 showResults();
@@ -634,6 +942,12 @@
         }
 
         function showResults() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+            const timerDisplay = document.getElementById('timer-display');
+            timerDisplay.classList.remove('show');
+            
             document.getElementById('quiz-container').innerHTML = '';
             const resultsScreen = document.getElementById('results-screen');
             const scorePercentage = Math.round((correctCount / questions.length) * 100);
@@ -658,6 +972,15 @@
             document.getElementById('result-emoji').textContent = emoji;
             document.getElementById('final-score').textContent = `${correctCount}/${questions.length}`;
             document.getElementById('result-message').textContent = message;
+            
+            // Show timer mode badge if enabled
+            const timerModeBadge = document.getElementById('timer-mode-badge');
+            if (timerMode) {
+                timerModeBadge.style.display = 'block';
+            } else {
+                timerModeBadge.style.display = 'none';
+            }
+            
             resultsScreen.classList.add('show');
             
             testResults.resultsScreen = {
@@ -665,7 +988,8 @@
                 emoji: emoji,
                 score: `${correctCount}/${questions.length}`,
                 message: message,
-                percentage: scorePercentage
+                percentage: scorePercentage,
+                timerMode: timerMode
             };
 
             updateProgress();
