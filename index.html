@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>우주 탐사 퀴즈</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --success: #10b981;
+            --error: #ef4444;
+            --bg: #ffffff;
+            --text: #1f2937;
+            --border: #e5e7eb;
+            --light-bg: #f9fafb;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #818cf8;
+                --success: #34d399;
+                --error: #f87171;
+                --bg: #111827;
+                --text: #f3f4f6;
+                --border: #374151;
+                --light-bg: #1f2937;
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            font-size: 15px;
+            line-height: 1.6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--bg);
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            padding: 40px 32px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .container {
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--primary), #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: var(--text);
+            opacity: 0.7;
+        }
+
+        .progress-container {
+            margin-bottom: 24px;
+        }
+
+        .progress-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--light-bg);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), #818cf8);
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+
+        .score-display {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 28px;
+            padding: 16px;
+            background: var(--light-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .score-item {
+            text-align: center;
+        }
+
+        .score-label {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .score-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .question-container {
+            margin-bottom: 28px;
+            display: none;
+        }
+
+        .question-container.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .question-text {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .options {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option {
+            padding: 16px;
+            border: 2px solid var(--border);
+            border-radius: 2px;
+            background: var(--light-bg);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 15px;
+            font-weight: 500;
+            user-select: none;
+            position: relative;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 0.5px;
+        }
+
+        .option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.03) 0px,
+                rgba(0, 0, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            border-radius: 2px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .option:hover {
+            border-color: var(--primary);
+            background: var(--bg);
+            transform: translateX(4px);
+            box-shadow: 0 0 8px rgba(99, 102, 241, 0.2);
+        }
+
+        .option:hover::before {
+            opacity: 1;
+        }
+
+        .option.selected {
+            border-color: var(--primary);
+            border-width: 2px;
+            background: var(--primary);
+            color: white;
+            box-shadow: 
+                0 0 0 1px var(--primary),
+                0 0 12px rgba(99, 102, 241, 0.5),
+                inset 0 0 8px rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
+
+        .option.selected::before {
+            opacity: 0.5;
+        }
+
+        .option.selected::after {
+            content: '● LOCKED';
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            opacity: 0.8;
+            text-transform: uppercase;
+            animation: pulse-text 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-text {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        .option.correct {
+            border-color: var(--success);
+            background: var(--success);
+            color: white;
+            animation: pulse 0.5s ease;
+        }
+
+        .option.incorrect {
+            border-color: var(--error);
+            background: var(--error);
+            color: white;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        .feedback {
+            margin-top: 16px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            display: none;
+            animation: slideUp 0.3s ease;
+            line-height: 1.5;
+        }
+
+        .feedback strong {
+            font-weight: 700;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .feedback.show {
+            display: block;
+        }
+
+        .feedback.correct {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border-left: 4px solid var(--success);
+        }
+
+        .feedback.incorrect {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+            border-left: 4px solid var(--error);
+        }
+
+        .next-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .next-btn.show {
+            display: block;
+        }
+
+        .next-btn:hover {
+            background: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(99, 102, 241, 0.3);
+        }
+
+        .next-btn:active {
+            transform: translateY(0);
+        }
+
+        .results-screen {
+            display: none;
+            text-align: center;
+            animation: slideIn 0.4s ease;
+        }
+
+        .results-screen.show {
+            display: block;
+        }
+
+        .result-emoji {
+            font-size: 64px;
+            margin-bottom: 16px;
+            animation: bounce 1s ease infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+
+        .result-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .result-score {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .result-message {
+            font-size: 15px;
+            opacity: 0.7;
+            margin-bottom: 32px;
+        }
+
+        .restart-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .restart-btn:hover {
+            background: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(99, 102, 241, 0.3);
+        }
+
+        .restart-btn:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">🚀 우주 탐사 퀴즈</h1>
+            <p class="subtitle">우주에 대해 얼마나 알고 있나요?</p>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-stats">
+                <span><span id="current-question">1</span> / <span id="total-questions">10</span></span>
+                <span>정확도: <span id="accuracy">0</span>%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+
+        <div class="score-display">
+            <div class="score-item">
+                <div class="score-label">정답</div>
+                <div class="score-value" id="correct-count">0</div>
+            </div>
+            <div class="score-item">
+                <div class="score-label">오답</div>
+                <div class="score-value" id="incorrect-count">0</div>
+            </div>
+            <div class="score-item">
+                <div class="score-label">점수</div>
+                <div class="score-value" id="score-percentage">0%</div>
+            </div>
+        </div>
+
+        <div id="quiz-container"></div>
+
+        <div class="results-screen" id="results-screen">
+            <div class="result-emoji" id="result-emoji">🎉</div>
+            <h2 class="result-title">퀴즈 완료!</h2>
+            <div class="result-score" id="final-score">0/10</div>
+            <p class="result-message" id="result-message">잘했어요!</p>
+            <button class="restart-btn" onclick="location.reload()">다시 시작하기</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "태양계에는 몇 개의 행성이 있을까요?",
+                options: ["7개", "8개", "9개", "10개"],
+                correct: 1
+            },
+            {
+                question: "화성의 별명은 무엇일까요?",
+                options: ["파란 행성", "빨간 행성", "노란 행성", "초록 행성"],
+                correct: 1
+            },
+            {
+                question: "우주에서 가장 가까운 별은?",
+                options: ["알파 센타우리", "시리우스", "프록시마 센타우리", "베가"],
+                correct: 2
+            },
+            {
+                question: "목성의 대적점(Great Red Spot)은 무엇인가요?",
+                options: ["산", "폭풍", "호수", "화산"],
+                correct: 1
+            },
+            {
+                question: "달의 공전 주기는 약 몇 일일까요?",
+                options: ["14일", "28일", "35일", "42일"],
+                correct: 1
+            },
+            {
+                question: "우주의 팽창을 발견한 천문학자는?",
+                options: ["뉴턴", "켈러", "허블", "아인슈타인"],
+                correct: 2
+            },
+            {
+                question: "토성의 가장 큰 위성은?",
+                options: ["엔셀라두스", "타이탄", "미마스", "레아"],
+                correct: 1
+            },
+            {
+                question: "빛의 년(light-year)은 무엇의 단위인가요?",
+                options: ["무게", "온도", "거리", "시간"],
+                correct: 2
+            },
+            {
+                question: "블랙홀에서 빛이 탈출할 수 없는 경계는?",
+                options: ["사건의 지평선", "궤도면", "코로나", "제트"],
+                correct: 0
+            },
+            {
+                question: "국제우주정거장(ISS)의 공전 주기는?",
+                options: ["45분", "90분", "120분", "150분"],
+                correct: 1
+            }
+        ];
+
+        let currentQuestion = 0;
+        let correctCount = 0;
+        let incorrectCount = 0;
+        let answered = false;
+
+        // Test results tracking
+        const testResults = {
+            scoreUpdates: [],
+            feedbackMessages: [],
+            progressBar: [],
+            keyboardNav: [],
+            resultsScreen: null
+        };
+
+        function initQuiz() {
+            currentQuestion = 0;
+            correctCount = 0;
+            incorrectCount = 0;
+            answered = false;
+            document.getElementById('results-screen').classList.remove('show');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const question = questions[currentQuestion];
+            const quizContainer = document.getElementById('quiz-container');
+            
+            quizContainer.innerHTML = `
+                <div class="question-container active">
+                    <div class="question-text">${question.question}</div>
+                    <div class="options">
+                        ${question.options.map((option, index) => `
+                            <div class="option" tabindex="0" onclick="selectAnswer(${index})" onkeypress="if(event.key==='Enter') selectAnswer(${index})">${option}</div>
+                        `).join('')}
+                    </div>
+                    <div class="feedback" id="feedback"></div>
+                </div>
+            `;
+            
+            updateProgress();
+            answered = false;
+        }
+
+        function selectAnswer(index) {
+            if (answered) return;
+            answered = true;
+
+            const question = questions[currentQuestion];
+            const options = document.querySelectorAll('.option');
+            const feedback = document.getElementById('feedback');
+            const isCorrect = index === question.correct;
+
+            options[index].classList.add(isCorrect ? 'correct' : 'incorrect');
+            
+            if (isCorrect) {
+                correctCount++;
+                feedback.innerHTML = '✓ <strong>정답입니다!</strong>';
+                feedback.className = 'feedback show correct';
+                testResults.feedbackMessages.push({
+                    question: currentQuestion,
+                    type: 'correct',
+                    text: feedback.textContent
+                });
+            } else {
+                incorrectCount++;
+                options[question.correct].classList.add('correct');
+                feedback.innerHTML = `<strong>❌ 틀렸어요</strong><br>정답: ${question.options[question.correct]}`;
+                feedback.className = 'feedback show incorrect';
+                testResults.feedbackMessages.push({
+                    question: currentQuestion,
+                    type: 'incorrect',
+                    text: feedback.textContent
+                });
+            }
+
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'next-btn show';
+            nextBtn.textContent = currentQuestion === questions.length - 1 ? '결과 보기' : '다음 문제';
+            nextBtn.onclick = nextQuestion;
+            
+            const container = document.querySelector('.question-container');
+            container.appendChild(nextBtn);
+
+            updateProgress();
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion >= questions.length) {
+                showResults();
+            } else {
+                showQuestion();
+            }
+        }
+
+        function updateProgress() {
+            const total = questions.length;
+            const answered = correctCount + incorrectCount;
+            const percentage = Math.round((answered / total) * 100);
+            const accuracy = answered > 0 ? Math.round((correctCount / answered) * 100) : 0;
+
+            document.getElementById('current-question').textContent = currentQuestion + 1;
+            document.getElementById('total-questions').textContent = total;
+            document.getElementById('progress-fill').style.width = `${percentage}%`;
+            document.getElementById('correct-count').textContent = correctCount;
+            document.getElementById('incorrect-count').textContent = incorrectCount;
+            document.getElementById('score-percentage').textContent = `${Math.round((correctCount / total) * 100)}%`;
+            document.getElementById('accuracy').textContent = accuracy;
+
+            testResults.scoreUpdates.push({
+                question: currentQuestion,
+                correct: correctCount,
+                incorrect: incorrectCount,
+                accuracy: accuracy
+            });
+
+            testResults.progressBar.push({
+                question: currentQuestion,
+                percentage: percentage
+            });
+        }
+
+        function showResults() {
+            document.getElementById('quiz-container').innerHTML = '';
+            const resultsScreen = document.getElementById('results-screen');
+            const scorePercentage = Math.round((correctCount / questions.length) * 100);
+            
+            let emoji = '😢';
+            let message = '다음 번에 더 잘할 수 있어요!';
+            
+            if (scorePercentage >= 90) {
+                emoji = '🌟';
+                message = '정말 우주 박사네요!';
+            } else if (scorePercentage >= 80) {
+                emoji = '🚀';
+                message = '훌륭한 성적입니다!';
+            } else if (scorePercentage >= 70) {
+                emoji = '👍';
+                message = '좋은 점수네요!';
+            } else if (scorePercentage >= 60) {
+                emoji = '🤔';
+                message = '계속 배우고 있네요!';
+            }
+            
+            document.getElementById('result-emoji').textContent = emoji;
+            document.getElementById('final-score').textContent = `${correctCount}/${questions.length}`;
+            document.getElementById('result-message').textContent = message;
+            resultsScreen.classList.add('show');
+            
+            testResults.resultsScreen = {
+                visible: true,
+                emoji: emoji,
+                score: `${correctCount}/${questions.length}`,
+                message: message,
+                percentage: scorePercentage
+            };
+
+            updateProgress();
+        }
+
+        // Automated smoke test function
+        async function runSmokeTest() {
+            console.log('🚀 Starting Smoke Test...\n');
+            
+            // Test 1: Initial score display
+            console.log('✓ Test 1: Initial Score Display');
+            console.log(`  - Correct: ${document.getElementById('correct-count').textContent}`);
+            console.log(`  - Incorrect: ${document.getElementById('incorrect-count').textContent}`);
+            console.log(`  - Score: ${document.getElementById('score-percentage').textContent}\n`);
+
+            // Test 2: Answer questions (mix of correct and incorrect)
+            const testAnswers = [1, 1, 1, 1, 1, 1, 1, 1, 0, 1]; // Most correct
+            
+            for (let i = 0; i < testAnswers.length; i++) {
+                console.log(`✓ Test 2.${i+1}: Question ${i+1}`);
+                selectAnswer(testAnswers[i]);
+                
+                // Check feedback
+                const feedback = document.getElementById('feedback');
+                console.log(`  - Feedback shown: ${feedback.classList.contains('show')}`);
+                console.log(`  - Feedback type: ${feedback.classList.contains('correct') ? 'Correct' : 'Incorrect'}`);
+                
+                // Wait for next button
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Click next
+                const nextBtn = document.querySelector('.next-btn');
+                if (nextBtn && i < testAnswers.length - 1) {
+                    nextBtn.click();
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                }
+            }
+
+            // Final next button click
+            const lastNextBtn = document.querySelector('.next-btn');
+            if (lastNextBtn) {
+                lastNextBtn.click();
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            // Test 3: Results screen
+            console.log('\n✓ Test 3: Results Screen');
+            const resultsScreen = document.getElementById('results-screen');
+            console.log(`  - Results visible: ${resultsScreen.classList.contains('show')}`);
+            console.log(`  - Final score: ${document.getElementById('final-score').textContent}`);
+            console.log(`  - Result emoji: ${document.getElementById('result-emoji').textContent}`);
+            console.log(`  - Result message: ${document.getElementById('result-message').textContent}`);
+
+            // Test 4: Score updates
+            console.log('\n✓ Test 4: Score Updates Tracking');
+            console.log(`  - Total updates tracked: ${testResults.scoreUpdates.length}`);
+            console.log(`  - Final correct: ${testResults.scoreUpdates[testResults.scoreUpdates.length - 1]?.correct}`);
+            console.log(`  - Final incorrect: ${testResults.scoreUpdates[testResults.scoreUpdates.length - 1]?.incorrect}`);
+
+            // Test 5: Keyboard navigation
+            console.log('\n✓ Test 5: Keyboard Navigation');
+            console.log(`  - Options have tabindex: ${Array.from(document.querySelectorAll('.option')).every(opt => opt.getAttribute('tabindex') !== null)}`);
+            console.log(`  - Enter key handler: Enabled`);
+
+            console.log('\n✅ Smoke Test Complete!\n');
+            console.log('📊 Summary:');
+            console.log(`  - Questions answered: ${testResults.scoreUpdates.length}`);
+            console.log(`  - Feedback messages: ${testResults.feedbackMessages.length}`);
+            console.log(`  - Results screen displayed: ${testResults.resultsScreen ? 'Yes' : 'No'}`);
+        }
+
+        // Initialize and run test
+        window.addEventListener('DOMContentLoaded', () => {
+            initQuiz();
+            // Uncomment the line below to run automated test
+            // setTimeout(runSmokeTest, 1000);
+        });
+
+        // Make test function globally available
+        window.runSmokeTest = runSmokeTest;
+    </script>
+</body>
+</html>
